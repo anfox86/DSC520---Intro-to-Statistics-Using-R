@@ -1,0 +1,135 @@
+---
+title: "Final Project - Section 3 - Week 11"
+author: "Andrea Fox"
+date: "11/7/2019"
+output: pdf_document
+---
+
+# Packages Used
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(devtools)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+```
+
+# Data Sources:
+* https://data.kcmo.org/Crime/KCPD-Crime-Data-2018/dmjw-d28i
+* https://data.kcmo.org/Crime/KCPD-Crime-Data-2017/98is-shjt
+* https://data.kcmo.org/Crime/KCPD-Crime-Data-2016/wbz8-pdv7
+
+# Data Import and Cleaning
+```{r Data Clean}
+setwd("C:/Users/Andrea Fox/OneDrive/Documents/R/DSC520 Statistics Using R")
+#Import the raw data and create initial dataframe
+kcpd.18 <- read.csv("KCPD_Crime_Data_2018.csv", header = TRUE)
+glimpse(kcpd.18)
+kcpd.17 <- read.csv("KCPD_Crime_Data_2017.csv", header = TRUE)
+glimpse(kcpd.17)
+kcpd.16 <- read.csv("KCPD_Crime_Data_2016.csv", header = TRUE)
+glimpse(kcpd.16)
+#Removing columns that don't match up
+kcpd18 = subset(kcpd.18, select = -c(Location))
+names(kcpd18)
+kcpd17 = subset(kcpd.17, select = -c(Location))
+names(kcpd17)
+kcpd16 = subset(kcpd.16, select = -c(Latitude, Longitude, Location.1))
+names(kcpd16)
+#Combining the 3 seperate dataframes into 1
+kcpd.data <- rbind(kcpd18, kcpd17, kcpd16)
+summary(kcpd.data)
+#At this point I want to create a subset of the data to narrow down my data.
+myvars <- c('Report_No', 'Reported_Date', 'Reported_Time', 'Offense', 'Description', 'Zip.Code', 'Area', 'Firearm.Used.Flag')
+main_kcpd <- kcpd.data[,myvars]
+summary(main_kcpd)
+#Remove NA's from new dataset
+
+#Need to seperate out the column of Reported Date to use for plotting
+cln_kcpd <- separate(main_kcpd, Reported_Date, c("Day", "Month", "Year"))
+head(cln_kcpd)
+```
+
+# Review the Data
+
+```
+glimpse(cln_kcpd)
+```
+
+
+## Question 1 - Discuss how you plan to uncover new information in the data that is not self-evident. 
+
+Originally when I cleaned my data I was only using one dataset, but that wasn't going to work for the complete project. I re-defined my clean-up process, which I included under Data Import and Cleaning. My first thought to uncover new information was to take the three separate datasets and combine them into one so I could look at the entire picture of crime. 
+
+```
+#Combining the 3 seperate dataframes into 1
+kcpd.data <- rbind(kcpd18, kcpd17, kcpd16)
+summary(kcpd.data)
+```
+I also separated out my Reported_Date column as it made it hard to plot. By doing this I could focus more on the months and years. 
+```
+#Need to seperate out the column of Reported Date to use for plotting
+cln_kcpd <- separate(main_kcpd, Reported_Date, c("Day", "Month", "Year"))
+head(cln_kcpd)
+```
+I also plan on using several different plots/graphs to help me get a better visual of the data that will help me drive some of the more technical aspects.I may also consider creating a few different variables to getting a more detailed look at the data.
+
+## Question 2 - What are different ways you could look at this data to answer the questions you want to answer?
+
+* First it's important to get an idea of crime in KC by Offense
+
+```
+ggplot(cln_kcpd, aes(Offense)) + 
+  geom_histogram(color = "black", binwidth = 2, aes(y=..count..)) +
+  labs(title = "KCPD Crime by Offense Code",
+       x = "Offense Code",
+       y = "Count")
+```
+
+* I then want to look at my crime by zipcode
+
+```
+ggplot(cln_kcpd, aes(as.factor(x=Zip.Code))) +
+  geom_bar(fill="dark green") +
+  labs(x="Zip Codes", y="Offense", title="Records By Zip Code")
+```
+
+* I then took a look at crime by year and by month
+
+```
+ggplot(cln_kcpd, aes(as.factor(x=Year))) + 
+  geom_histogram(fill = "green", binwidth = 2, stat = "count", aes(y=..count..)) +
+  labs(title = "Crime in KC by Year", x = "Year", y = "Count")
+
+ggplot(cln_kcpd, aes(as.factor(x= Month))) + 
+  geom_bar(fill = "blue", stat = "count", aes(y=..count..)) +
+  labs(title = "Crime in KC by Month", x = "Month", y = "Count")
+```
+
+* I also need to look at the crime and see the difference in crime with or without a firearm, but I'm still working on those plots as they don't come out correctly initially. 
+
+## Question 3 - Do you plan to slice and dice the data in different ways, create new variables, or join separate data frames to create new summary information? Explain.
+
+As part of my clean-up process I decided to join my 3 separate dataframes into one to make analyzing the data easier. I figure if I need to look at data by month or year I can call that out in my analysis or plots. I also created a subset of data that contains the most relevant values in answering my original questions.
+
+## Questio 4 - How could you summarize your data to answer key questions?
+
+* Compare KC crime using firearms and not using firearms
+* Look at the trend of crime across years and months. This will give us an idea if 1) crime is increasing each year, and 2) is more crime happening at certain times of year.
+* Determine if there is a certain area in the KC area that experiences more crime
+
+## Question 5 - What types of plots and tables will help you to illustrate the findings to your questions? Ensure that all graph plots have axis titles, legend if necessary, scales are appropriate, appropriate geoms used, etc.)
+
+I plan to use mostly bar graphs as they give the best visuals for the data I have. 
+
+## Question 6 - What do you not know how to do right now that you need to learn to answer your questions?
+
+* One thing I messed up on when cleaning my data was switching Day and Month around when I separated them.
+* Need help in figuring out how I can visualize my crime with and without a firearm. I'm thinking stacked bar graphs, but I can't seem to get the size of my bars right.
+* Need help adjusting my bar sizes to be more ledgible.
+
+## Question 7 - Do you plan on incorporating any machine learning techniques to answer your research questions? Explain.
+
+I do plan on using some machine learning however I haven't reached the point of using it yet. I want to be able to predict the trend in crime in the next year or two. I think it's important to find out whether crime is staying at an average number each year or if we're really experiencing an increase.
+
